@@ -1,4 +1,12 @@
 apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: argocd-repo-server
+automountServiceAccountToken: true
+
+---
+
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: argocd-cm
@@ -22,7 +30,6 @@ spec:
   repo:
 
     serviceaccount: "argocd-repo-server"
-    mountsatoken: true
 
     # 1. Define an emptyDir volume which will hold the custom binaries
     volumes:

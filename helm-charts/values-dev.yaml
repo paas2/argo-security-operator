@@ -1,0 +1,17 @@
+argocd-apps:
+  projects: 
+  - name: argocd
+    namespace: argocd
+    additionalLabels: {}
+    additionalAnnotations: {}
+    description: Argocd Project
+    sourceRepos:
+    - '*'
+    destinations:
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+    clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+    orphanedResources:
+      warn: false 

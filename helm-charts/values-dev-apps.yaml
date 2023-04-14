@@ -1,0 +1,66 @@
+argocd-apps:
+  applications: 
+  - name: argocd-deploy-secret
+    annotations:
+      argocd.argoproj.io/sync-wave: "0"    
+    namespace: argocd
+    destination:
+      namespace: argocd
+      server: https://kubernetes.default.svc
+    project: argocd
+    source:
+      plugin:
+        name: argocd-vault-plugin-helm  
+        env:
+          - name: HELM_VALUES
+            value: |
+              # global:   
+              #   env: dev
+              #   clusterName: bwb                  
+      path: helm-charts
+      repoURL: https://github.com/paas2/argo-deploy-secret.git
+      targetRevision: HEAD  
+                  
+  - name: infra-apps  
+    namespace: argocd
+    annotations:
+      argocd.argoproj.io/sync-wave: "1"     
+    destination:
+      namespace: argocd
+      server: https://kubernetes.default.svc
+    project: argocd
+    source:
+      helm:
+        version: v3
+        valueFiles:
+        - values.yaml 
+        - values-dev.yaml 
+      path: ./
+      repoURL: git@github.com:paas2/security-infra-apps.git 
+      targetRevision: HEAD
+    syncPolicy:
+      automated:
+        selfHeal: true
+        prune: true        
+    
+  - name: security-apps  
+    namespace: argocd
+    annotations:
+      argocd.argoproj.io/sync-wave: "1"     
+    destination:
+      namespace: argocd
+      server: https://kubernetes.default.svc
+    project: argocd
+    source:
+      helm:
+        version: v3
+        valueFiles:
+        - values.yaml 
+        - values-dev.yaml 
+      path: ./
+      repoURL: git@github.com:paas2-security/secyurity-apps.git 
+      targetRevision: HEAD
+    syncPolicy:
+      automated:
+        selfHeal: true
+        prune: true        

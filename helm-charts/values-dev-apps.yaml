@@ -8,7 +8,8 @@ argocd-apps:
       namespace: argocd
       server: https://kubernetes.default.svc
     project: argocd
-    source:             
+    source:
+      plugin: {}                
       path: helm-charts
       repoURL: https://github.com/paas2/argo-deploy-secret.git
       targetRevision: HEAD  

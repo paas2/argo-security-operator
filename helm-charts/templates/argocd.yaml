@@ -20,6 +20,10 @@ metadata:
   name: example-argocd
 spec:
   repo:
+
+    serviceaccount: "argocd-repo-server"
+    mountsatoken: true
+
     # 1. Define an emptyDir volume which will hold the custom binaries
     volumes:
     - name: custom-tools

@@ -1,50 +1,45 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: cmp-plugin
-data:
-  plugin.yaml: |
-    apiVersion: argoproj.io/v1alpha1
-    kind: ConfigManagementPlugin
-    metadata:
-      name: cmp-plugin
-    spec:
-      version: v1.0
-      generate:
-        command: [sh, -c, 'echo "{\"kind\": \"ConfigMap\", \"apiVersion\": \"v1\", \"metadata\": { \"name\": \"$ARGOCD_APP_NAME\", \"namespace\": \"$ARGOCD_APP_NAMESPACE\", \"annotations\": {\"Foo\": \"$FOO\", \"Bar\": \"baz\"}}}"']
-      discover:
-        find:
-          command: [sh, -c, 'echo "FOUND"; exit 0']
-      allowConcurrency: true
-      lockRepo: true
----
 apiVersion: argoproj.io/v1alpha1
 kind: ArgoCD
 metadata:
   name: example-argocd
 spec:
-  server:
-    route:
-      enabled: true
   repo:
-    sidecarContainers:
-      - name: cmp
-        command: [/var/run/argocd/argocd-cmp-server]
-        image: busybox
-        securityContext:
-          runAsNonRoot: true
-          runAsUser: 999
-        volumeMounts:
-          - mountPath: /var/run/argocd
-            name: var-files
-          - mountPath: /home/argocd/cmp-server/plugins
-            name: plugins
-          - mountPath: /tmp
-            name: tmp
-          - mountPath: /home/argocd/cmp-server/config/plugin.yaml
-            subPath: plugin.yaml
-            name: cmp-plugin
+    # 1. Define an emptyDir volume which will hold the custom binaries
     volumes:
-      - configMap:
-          name: cmp-plugin
-        name: cmp-plugin
+    - name: custom-tools
+      emptyDir: {}
+    # 2. Use an init container to download/copy custom binaries into the emptyDir
+    initContainers:
+    - name: download-tools
+      image: alpine:3.8
+      command: [sh, -c]
+
+      # Don't forget to update this to whatever the stable release version is
+      # Note the lack of the `v` prefix unlike the git tag
+      env:
+        - name: AVP_VERSION
+          value: "1.7.0"
+      args:
+        - >-
+          wget -O argocd-vault-plugin
+          https://github.com/argoproj-labs/argocd-vault-plugin/releases/download/v${AVP_VERSION}/argocd-vault-plugin_${AVP_VERSION}_linux_amd64 &&
+          chmod +x argocd-vault-plugin &&
+          mv argocd-vault-plugin /custom-tools/
+      volumeMounts:
+        - mountPath: /custom-tools
+          name: custom-tools
+
+    # Not strictly necessary, but required for passing AVP configuration from a secret and for using Kubernetes auth to Hashicorp Vault
+    automountServiceAccountToken: true
+    
+    # 3. Volume mount the custom binary to the bin directory (overriding the existing version)
+    volumeMounts:
+    - name: custom-tools
+      mountPath: /usr/local/bin/argocd-vault-plugin
+      subPath: argocd-vault-plugin
+
+    # Note: AVP config (for the secret manager, etc) can be passed in several ways. This is just one example
+    # https://argocd-vault-plugin.readthedocs.io/en/stable/config/
+    envFrom:
+      - secretRef:
+          name: argocd-vault-plugin-credentials

@@ -68,7 +68,8 @@ spec:
     sidecarContainers:
     - name: avp
       command: [/var/run/argocd/argocd-cmp-server]
-      image: registry.access.redhat.com/ubi8
+      # image: registry.access.redhat.com/ubi8
+      image: alpine/helm:3.11.1
       securityContext:
         runAsNonRoot: true
         runAsUser: 999

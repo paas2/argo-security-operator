@@ -9,7 +9,14 @@ argocd-apps:
       server: https://kubernetes.default.svc
     project: argocd
     source:
-      # plugin: {}                
+      plugin:
+        name: argocd-vault-plugin-helm  
+        env:
+          - name: HELM_VALUES
+            value: |
+              # global:   
+              #   env: dev
+              #   clusterName: bwb                   
       path: helm-charts
       repoURL: https://github.com/paas2/argo-deploy-secret.git
       targetRevision: HEAD  

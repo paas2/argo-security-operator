@@ -43,6 +43,7 @@ metadata:
 spec:
   repo: 
     serviceaccount: "argocd-repo-server"
+    automountServiceAccountToken: true
     volumes:
       - configMap:
           name: cmp-plugin

@@ -1,4 +1,12 @@
 apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: argocd-repo-server
+automountServiceAccountToken: true
+
+---
+
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: cmp-plugin
@@ -31,7 +39,7 @@ metadata:
   name: example-argocd
 spec:
   repo:
-    automountServiceAccountToken: true
+    serviceaccount: "argocd-repo-server"
     volumes:
       - configMap:
           name: cmp-plugin

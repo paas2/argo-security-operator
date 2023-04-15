@@ -26,7 +26,7 @@ data:
             - "find . -name '*.yaml' | xargs -I {} grep \"<path\\|avp\\.kubernetes\\.io\" {} | grep ."
       generate:
         command:
-          - argocd-vault-plugin
+          - argocd-vault-plugin-helm
           - generate
           - "."
       lockRepo: false
